@@ -53,7 +53,8 @@ def commit_file(file_path):
         ],
         cwd=repository,
         capture_output=True,
-        text=True
+        text=True,
+        check=False
     )
 
     if result.returncode == 0:
@@ -61,7 +62,9 @@ def commit_file(file_path):
         return False
 
     if result.returncode != 1:
-        raise RuntimeError(result.stderr or "Unable to check Git changes.")
+        raise RuntimeError(
+            result.stderr or "Unable to check Git changes."
+        )
 
     run_git_command(
         [
