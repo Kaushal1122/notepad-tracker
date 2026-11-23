@@ -1,13 +1,18 @@
-from flask import Blueprint, jsonify, render_template, request
+import subprocess
 
-from app import file_manager
+from flask import Blueprint, current_app, jsonify, render_template, request
+
+from app import file_manager, git_manager
 
 main = Blueprint("main", __name__)
 
 
 @main.route("/", methods=["GET"])
 def index():
-    return render_template("index.html")
+    return render_template(
+        "index.html",
+        autosave_delay=current_app.config["AUTOSAVE_DELAY"]
+    )
 
 
 @main.route("/api/files", methods=["POST"])
@@ -70,10 +75,21 @@ def save_file():
             data["content"]
         )
 
+        committed = git_manager.commit_file(path)
+
         return jsonify({
             "message": "File saved successfully.",
-            "path": str(path)
+            "path": str(path),
+            "committed": committed
         }), 200
 
-    except (ValueError, FileNotFoundError, OSError) as error:
-        return jsonify({"error": str(error)}), 400
+    except (
+        ValueError,
+        FileNotFoundError,
+        OSError,
+        RuntimeError,
+        subprocess.CalledProcessError
+    ) as error:
+        message = getattr(error, "stderr", None) or str(error)
+
+        return jsonify({"error": message.strip()}), 400
