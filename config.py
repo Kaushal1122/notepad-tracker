@@ -9,3 +9,4 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "development-key")
     DEBUG = os.getenv("DEBUG", "False").lower() == "true"
     AUTOSAVE_DELAY = int(os.getenv("AUTOSAVE_DELAY", "2000"))
+    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()

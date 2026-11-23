@@ -1,8 +1,11 @@
+import logging
 import subprocess
 
 from flask import Blueprint, current_app, jsonify, render_template, request
 
 from app import file_manager, git_manager
+
+logger = logging.getLogger(__name__)
 
 main = Blueprint("main", __name__)
 
@@ -31,9 +34,11 @@ def create_file():
         }), 201
 
     except FileExistsError as error:
+        logger.warning("File already exists: %s", data["path"])
         return jsonify({"error": str(error)}), 409
 
     except (ValueError, OSError) as error:
+        logger.exception("File creation failed.")
         return jsonify({"error": str(error)}), 400
 
 
@@ -52,7 +57,8 @@ def open_file():
             "content": content
         }), 200
 
-    except (ValueError, FileNotFoundError, OSError) as error:
+    except (ValueError, OSError) as error:
+        logger.exception("File opening failed.")
         return jsonify({"error": str(error)}), 400
 
 
@@ -85,11 +91,12 @@ def save_file():
 
     except (
         ValueError,
-        FileNotFoundError,
         OSError,
         RuntimeError,
         subprocess.CalledProcessError
     ) as error:
+        logger.exception("File saving or Git commit failed.")
+
         message = getattr(error, "stderr", None) or str(error)
 
         return jsonify({"error": message.strip()}), 400

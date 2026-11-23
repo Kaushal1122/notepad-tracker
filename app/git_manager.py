@@ -1,5 +1,8 @@
+import logging
 import subprocess
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 def run_git_command(command, directory):
@@ -30,6 +33,8 @@ def commit_file(file_path):
         run_git_command(["init"], path.parent)
         repository = path.parent
 
+        logger.info("Initialized Git repository: %s", repository)
+
     relative_path = path.relative_to(repository)
 
     run_git_command(
@@ -52,6 +57,7 @@ def commit_file(file_path):
     )
 
     if result.returncode == 0:
+        logger.info("No changes to commit: %s", path)
         return False
 
     if result.returncode != 1:
@@ -68,5 +74,7 @@ def commit_file(file_path):
         ],
         repository
     )
+
+    logger.info("Created Git commit for: %s", path)
 
     return True
